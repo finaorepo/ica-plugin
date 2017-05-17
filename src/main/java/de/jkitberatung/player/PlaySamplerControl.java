@@ -151,6 +151,7 @@ public class PlaySamplerControl extends GenericController {
 		icaConnector.setApp(getInitialApp());
 		icaConnector.setRunningMode(getRunningMode());
 		icaConnector.setUseIcaFile(getUseIcaFile());
+		icaConnector.setIcaFilePath(getIcaFilePath());
     	((PlaySamplerControl) clone).setIcaConnector(icaConnector);
     	
     	return clone;
