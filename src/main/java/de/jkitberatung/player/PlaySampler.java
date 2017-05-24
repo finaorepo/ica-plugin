@@ -58,7 +58,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 	private double sleepFactor;
 	private RecordingStep step;
 	private HashMap<String, String> stringInput;
-	private int interval = JMeterUtils.getPropDefault("ica.polling.interval", 500);
+	private int interval = JMeterUtils.getPropDefault("ica.polling.interval", 100);
 	private int maxduration = JMeterUtils.getPropDefault("ica.max.duration", 30000);
 	private boolean isInterrupted = false;
 
@@ -335,7 +335,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 		
 		boolean done = false;
 		IScreenShot ss = null;
-		String waitfor = (String) result.getRecordingHashes().get(result.getRecordingHashes().size());
+		String waitfor = (String) result.getRecordingHashes().get(result.getRecordingHashes().size() -1);
 		int waitedFor = 0;
 		while (!done) {
 			ss = ica.session().createScreenShot(Integer.parseInt(x) , Integer.parseInt(y),
@@ -357,6 +357,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 				
 			}
 		}
+		result.setLatency(waitedFor);
 		crtPlayingStep.addInteraction(new Interaction(Interaction.Label.ScreenShot, ss.bitmapHash()));
 		result.addHash(ss.bitmapHash(), false);
 		if (saveBitmap) {
