@@ -142,40 +142,40 @@ public class CitrixPanel extends JPanel {
 		panel.add(jrbProvideDetails, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(jlblHost, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
+		panel.add(jlblHost, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(GuiUtil.getMandatoryPanel(jtfHost), new GridBagConstraints(1, 2, 1, 1, 1.0, 0.0,
+		panel.add(GuiUtil.getMandatoryPanel(jtfHost), new GridBagConstraints(1, 1, 1, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(jlblDomain, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
+		panel.add(jlblDomain, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(jtfDomain, new GridBagConstraints(1, 3, 1, 1, 1.0, 0.0, GridBagConstraints.WEST,
+		panel.add(jtfDomain, new GridBagConstraints(1, 2, 1, 1, 1.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(jlblPort, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
+		panel.add(jlblPort, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(jtfPort, new GridBagConstraints(1, 4, 1, 1, 1.0, 0.0, GridBagConstraints.WEST,
+		panel.add(jtfPort, new GridBagConstraints(1, 3, 1, 1, 1.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(jlblUser, new GridBagConstraints(0, 5, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
+		panel.add(jlblUser, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(GuiUtil.getMandatoryPanel(jtfUser), new GridBagConstraints(1, 5, 1, 1, 1.0, 0.0,
+		panel.add(GuiUtil.getMandatoryPanel(jtfUser), new GridBagConstraints(1, 4, 1, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(jlblPass, new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
+		panel.add(jlblPass, new GridBagConstraints(0, 5, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(GuiUtil.getMandatoryPanel(jtfPass), new GridBagConstraints(1, 6, 1, 1, 1.0, 0.0,
+		panel.add(GuiUtil.getMandatoryPanel(jtfPass), new GridBagConstraints(1, 5, 1, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(jlblInitialApp, new GridBagConstraints(0, 7, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
+		panel.add(jlblInitialApp, new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
-		panel.add(GuiUtil.getMandatoryPanel(jtfInitialApp), new GridBagConstraints(1, 7, 1, 1, 1.0, 0.0,
+		panel.add(GuiUtil.getMandatoryPanel(jtfInitialApp), new GridBagConstraints(1, 6, 1, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, GuiUtil.INSETS, 0, 0));
 
 		panel.setBorder(
