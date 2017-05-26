@@ -217,7 +217,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
         Enumeration<JMeterTreeNode> enumNode = threadGroupNode().children();
         while (enumNode.hasMoreElements()) {
             JMeterTreeNode child = enumNode.nextElement();
-            if (child.getUserObject() instanceof CSVDataSet)
+            if (child.getUserObject() instanceof CSVDataSet && child.isEnabled())
             	return true;
         }
         return false;
