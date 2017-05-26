@@ -35,6 +35,9 @@ public class ICAInitializer {
 //		ica.application(initApp.startsWith("#") ? initApp : "#"+initApp);
 		ica.initialProgram(initApp.startsWith("#") ? initApp : "#"+initApp);
 
+		ica.desiredVRes(768);
+		ica.desiredHRes(1024);
+		
 		// Launch a new session
 		ica.launch(true);
 
@@ -64,6 +67,8 @@ public class ICAInitializer {
 	public static IICAClient initICASession(String icaFilePath, String runningMode) {
 		L.fine("Initializing ICA Session... " + icaFilePath);
 		IICAClient ica = ClassFactory.createICAClient();
+		ica.desiredVRes(768);
+		ica.desiredHRes(1024);
 		ica.launch(true);
 		ica.loadIcaFile(icaFilePath);
 		
