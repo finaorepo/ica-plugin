@@ -13,6 +13,8 @@ import java.util.logging.Logger;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 
+import org.apache.jmeter.threads.JMeterContextService;
+
 import de.jkitberatung.ica.wsh.IICAClient;
 import de.jkitberatung.ica.wsh.IWindows;
 import de.jkitberatung.ica.wsh.events._IICAClientEvents;
@@ -129,11 +131,13 @@ public class IcaConnector {
 
 	private void init() {
 		if(getUseIcaFile()) 
-			ica = ICAInitializer.initICASession(getIcaFilePath(), getRunningMode());
+			ica = ICAInitializer.initICASession(getVariableValue(getIcaFilePath()), 
+					getRunningMode());
 		else
-			ica = ICAInitializer.initICASession(getInitialApp(), getIcaAddress(),
-				getPort(), getDomain(), getUsername(), getPassword(),
-				getRunningMode());
+			ica = ICAInitializer.initICASession(getVariableValue(getInitialApp()),
+					getVariableValue(getIcaAddress()), getVariableValue(getPort()), 
+					getVariableValue(getDomain()), getVariableValue(getUsername()), 
+					getVariableValue(getPassword()), getRunningMode());
 	}
 
 	private String getRunningMode() {
@@ -376,5 +380,14 @@ public class IcaConnector {
 
 	public void setIcaMap(HashMap<String, IICAClient> map) {
 		icaMap = map;
+	}
+	
+	//returns ${variable} value if it exists; returns arg otherwise
+	public String getVariableValue(String val) {
+		if(val.trim().startsWith("${") && val.trim().endsWith("}")) {
+			return JMeterContextService.getContext().getVariables().
+					get(val.substring(2, val.length() - 1));
+		}
+		return val;
 	}
 }

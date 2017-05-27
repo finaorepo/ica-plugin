@@ -131,7 +131,6 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 				}
 				ica = samplerController.getIcaConnector().getIca();
 				IcaConnector.getInstance().getIcaMap().put(getThreadName(), ica);
-				L.fine("footprint#2");
 			}
 			
 			if (ica == null || ica.session() == null) {
@@ -198,8 +197,13 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 			stringInput = IcaConnector.getInstance().getTagsMap().get(stepName);
 		
 		// Check if we need to play custom csv input  
-		if (treeContainsCsvDataSetConfig() && tagIsCustomizable(strInteraction.getName()))
-			interactions = buildInteractionsFromString(getTagInput(strInteraction.getName()));
+		if (treeContainsCsvDataSetConfig() && tagIsCustomizable(strInteraction.getName())) {
+			String tagInput =   getTagInput(strInteraction.getName());
+			
+			//We should use default value if param not set
+			if(!tagInput.equalsIgnoreCase(getTagInput(tagInput)))
+				interactions = buildInteractionsFromString(getTagInput(strInteraction.getName()));
+		}
 
 		for (Interaction inter : interactions) 
 			playInteraction(inter, lastMouseDown, keyboard, mouse, result);
