@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import de.jkitberatung.recorder.Interaction.Label;
+
 public class RecordingStep
 {
 	public static final String STEP_KEY = "STEP";
@@ -53,7 +55,8 @@ public class RecordingStep
 
 	public void addInteraction(Interaction i)
 	{
-		if (autoAddSleepTimes) {
+		//Dont add sleep time if there is a screenshot or screenshot time will not be accurate
+		if (autoAddSleepTimes && i.getLabel() != Label.ScreenShot) {
 			interactionList.add(new Interaction(Interaction.Label.SleepTime, (System.currentTimeMillis() - lastTimestamp) + ""));
 			lastTimestamp = System.currentTimeMillis();
 		}
