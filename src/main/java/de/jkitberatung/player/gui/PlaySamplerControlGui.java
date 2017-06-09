@@ -47,7 +47,6 @@ import de.jkitberatung.player.PlaySamplerControl;
 import de.jkitberatung.recorder.Interaction;
 import de.jkitberatung.recorder.RecordingStep;
 import de.jkitberatung.recorder.StringInteraction;
-//import de.jkitberatung.util.IcaConnector;
 import de.jkitberatung.util.InteractionUtil;
 import de.jkitberatung.util.gui.CitrixPanel;
 import de.jkitberatung.util.gui.GuiUtil;
@@ -57,9 +56,6 @@ import de.jkitberatung.util.gui.GuiUtil;
 public class PlaySamplerControlGui extends AbstractControllerGui 
 								implements JMeterGUIComponent/*, TableModelListener*/ {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -2775000194731817750L;
 	
 	private static final String CHOOSE_INTERACTIONS_FILE = "Choose interaction file";
@@ -365,25 +361,6 @@ public class PlaySamplerControlGui extends AbstractControllerGui
 			samplerController.setRunningMode(jrbNormalMode.isSelected()?"NORMAL":"WINDOWLESS");
 			samplerController.setUseIcaFile(citrixPanel.getUseIcaFile());
 			samplerController.setIcaFilePath(citrixPanel.getIcaFilePath());
-/*
- * 			IcaConnector icaConnector = samplerController.getIcaConnector();
-			if (icaConnector == null)
-				icaConnector = new IcaConnector();
-
- * */
-//			IcaConnector icaConnector = new IcaConnector();
-//			icaConnector.setAddress(samplerController.getIcaAddress());
-//			icaConnector.setDomain(samplerController.getDomain());
-//			icaConnector.setPort(samplerController.getPort());
-//			icaConnector.setUsername(samplerController.getUsername());
-//			icaConnector.setPassword(samplerController.getPassword());
-//			icaConnector.setApp(samplerController.getInitialApp());
-//			icaConnector.setRunningMode(samplerController.getRunningMode());
-//			icaConnector.setUseIcaFile(samplerController.getUseIcaFile());
-//			icaConnector.setIcaFilePath(samplerController.getIcaFilePath());
-			
-//			samplerController.setIcaConnector(icaConnector);
-//			IcaConnector.getInstance().setSamplerController(samplerController);
 		}
 	}
 

@@ -15,9 +15,6 @@ import de.jkitberatung.util.InteractionUtil;
 
 public class PlaySamplerControl extends GenericController {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -4000209595000276037L;
 
 	private static final String ADDRESS = "PlaySamplerControl.ica_address";
@@ -161,19 +158,6 @@ public class PlaySamplerControl extends GenericController {
     	((PlaySamplerControl) clone).setSleepTimes(getSleepTimes());
     	((PlaySamplerControl) clone).setUseIcaFile(getUseIcaFile());
 		
-   	
-//    	IcaConnector icaConnector = new IcaConnector();
-//		icaConnector.setAddress(getIcaAddress());
-//		icaConnector.setDomain(getDomain());
-//		icaConnector.setPort(getPort());
-//		icaConnector.setUsername(getUsername());
-//		icaConnector.setPassword(getPassword());
-//		icaConnector.setApp(getInitialApp());
-//		icaConnector.setRunningMode(getRunningMode());
-//		icaConnector.setUseIcaFile(getUseIcaFile());
-//		icaConnector.setIcaFilePath(getIcaFilePath());
-//    	((PlaySamplerControl) clone).setIcaConnector(icaConnector);
-    	
     	return clone;
     }
 
@@ -198,13 +182,9 @@ public class PlaySamplerControl extends GenericController {
 		return getPropertyAsString(RUNNING_MODE);
 	}
 	
-//steps = InteractionUtil.readInteractions(jtfInteractionsFile.getText());
-//IcaConnector.getInstance().setSteps(steps);
-	
 	@Override
 	public Sampler next() {
 		String threadGroupName = JMeterContextService.getContext().getThreadGroup().getName();
-		System.out.println("***next()***\nthreadGroupName:"+threadGroupName+"\n**************");
 
 		if(IcaConnector.getInstance(threadGroupName) == null) {
 			L.fine("PlaySamplerControl creating icaConn for thread " + threadGroupName);
@@ -213,7 +193,7 @@ public class PlaySamplerControl extends GenericController {
 				steps = InteractionUtil.readInteractions(getInteractionsPath());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				System.out.println("NULL IN PlayerSamplerControl next()");
+				L.fine("PlaySamplerControl Err reading Interaction File: " + getInteractionsPath());
 			}
 			IcaConnector icaConn = new IcaConnector();
 			icaConn.setAddress(getIcaAddress());

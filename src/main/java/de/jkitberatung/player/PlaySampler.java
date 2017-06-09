@@ -128,46 +128,24 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 	protected void playInteractions(PlaySampleResult result) {
 
 		try {			
-//			if (null == samplerController) 
-//				setController((PlaySamplerControl) IcaConnector.getInstance().getSamplerController().clone());
-			IcaConnector icaConn = IcaConnector.getInstance(getThreadGroupName());
-			System.out.println("Sampler IcaConnector check: " + icaConn.getLocationHashFolder());
-			
+			IcaConnector icaConn = IcaConnector.getInstance(getThreadGroupName());			
 			if(icaConn == null) {
-				//CONTROLLER HASNT CREATED THIS. THAT IS A PROBLEM
+				//CONTROLLER SHOULD HAVE SET THIS UP. LOG ERROR AND ABORT.
 				L.fine("Error with Controller initializing IcaConn");
 				return;
 			}
 			
-			System.out.println("***CHECKS IN SAMPLER***");
-			System.out.println(icaConn);
-			System.out.println(icaConn.getIcaMap().containsKey(getThreadName()));
-//			System.out.println(icaConn.getIcaMap().get(getThreadName()).session());
-			
-			if ((icaConn != null)
+			//ica exists and is connected for this thread in the icaConn's icaMap
+			if ((icaConn != null) 
 					&& icaConn.getIcaMap().containsKey(getThreadName()) 
 					&& icaConn.getIcaMap().get(getThreadName()).session() != null) {			
 				ica = icaConn.getIcaMap().get(getThreadName());
 				L.fine("footprint#1");
-			} else {
-				//
-				
-				
-				System.out.println("playSampler in the else block");
-//				if (step.isFirst()) {
-					//create a new conn, add to icaMap of icaConn
-//					L.fine(getThreadName() + ": " + "Forcing new connection...");
-//				}
-//				icaConn = samplerController.getIcaConnector().getIca();
-//				icaConn.getIcaMap().put(getThreadName(), ica);
-				
-//				ica = icaConn.getIca();
-				ica = icaConn.getIca(getThreadName());
-				icaConn.getIcaMap().put(getThreadName(), ica);
-			}
+			} else { //create a new ICA, add to icaConn's icaMap
+				ica = icaConn.createNewIca(getThreadName(), true);
+			}			
 			
 			if (ica == null || ica.session() == null) {
-				System.out.println(getThreadName() + ": " + "Failed playing interactions of step: " + step.getName());
 				L.fine(getThreadName() + ": " + "Failed playing interactions of step: " + step.getName());
 				return;
 			}
@@ -226,16 +204,11 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 
 		StringInteraction strInteraction = (StringInteraction) interaction;
 		List<Interaction> interactions = strInteraction.getInteractions();
-
-//		if (null == stringInput)
-//			stringInput = IcaConnector.getInstance().getTagsMap().get(stepName);
-		  
-		// Check if we need to play custom csv input. 
-		// Third condition checks that returned value is not equal to ${variable}   
-//		if (treeContainsCsvDataSetConfig() && tagIsCustomizable(strInteraction.getName())
-//				&& !getTagInput(strInteraction.getName()).equalsIgnoreCase(stringInput.get(strInteraction.getName()))) {
-//			interactions = buildInteractionsFromString(getTagInput(strInteraction.getName()));
-//		}
+		
+		String paramVal = JMeterContextService.getContext().getVariables().get(stepName + ":" + interaction.getValue());
+		if(paramVal != null) {
+			interactions = buildInteractionsFromString(paramVal);
+		}
 
 		for (Interaction inter : interactions) 
 			playInteraction(inter, lastMouseDown, keyboard, mouse, result);
@@ -258,7 +231,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 //        }
 //        return false;
 //	}
-
+//
 //	private JMeterTreeNode threadGroupNode() {
 //        JMeterTreeModel treeModel = GuiPackage.getInstance().getTreeModel();
 //		JMeterTreeNode myNode = treeModel.getNodeOf(IcaConnector.getInstance().getSamplerController());

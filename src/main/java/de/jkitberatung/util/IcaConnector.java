@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -18,15 +17,9 @@ import org.apache.jmeter.threads.JMeterContextService;
 import de.jkitberatung.ica.wsh.IICAClient;
 import de.jkitberatung.ica.wsh.IWindows;
 import de.jkitberatung.ica.wsh.events._IICAClientEvents;
-import de.jkitberatung.player.PlaySamplerControl;
 import de.jkitberatung.recorder.RecordingStep;
 
 public class IcaConnector {
-
-	//used for creating new client. really dont like this. should probably
-	//be done in a seperate class
-	
-	private PlaySamplerControl samplerController;
 
 	private String app;
 	private String address;
@@ -42,7 +35,6 @@ public class IcaConnector {
 	private String icaFilePath;
 
 	private List<RecordingStep> steps;
-//	private LinkedHashMap<String, LinkedHashMap<String, String>> tagsMap;
 	private static HashMap<String, IcaConnector> connMap;
 
 	private JCheckBox jckbSleepCheckBox;
@@ -109,13 +101,6 @@ public class IcaConnector {
 	public IcaConnector() {
 		showVersion();
 	}
-
-//	public static IcaConnector getInstance() {
-//		if (instance == null)
-//			instance = new IcaConnector();
-//
-//		return instance;
-//	}
 	
 	public static IcaConnector getInstance(String key) {
 		if(connMap == null)
@@ -132,10 +117,6 @@ public class IcaConnector {
 		conn = null;
 		connMap.remove(key);
 	}
-
-
-
-
 
 	private String getRunningMode() {
 		return runningMode;
@@ -205,11 +186,8 @@ public class IcaConnector {
 		this.icaFilePath = icaFilePath;
 	}
 
-
-
-	
-	//key should be threadName from sampler perspective
-	public IICAClient getIca(String key) {
+	//PlaySampler uses threadName for key
+	public IICAClient createNewIca(String key, boolean addToMap) {
 		IICAClient ica = icaMap.get(key);
 		
 		if (ica == null || ica.session() == null) {
@@ -224,7 +202,12 @@ public class IcaConnector {
 					L.fine("Interrupting connection attempt loop... done.");
 				}
 			}
+			
+			ica = connHelper.ica;
 		}
+		
+		if(addToMap)
+			icaMap.put(key, ica);
 		
 		return ica;
 	}
@@ -260,32 +243,11 @@ public class IcaConnector {
 		return jcbSleepComboBox;
 	}
 
-//	public void setTagsMap(
-//			LinkedHashMap<String, LinkedHashMap<String, String>> tagsMap) {
-//		this.tagsMap = tagsMap;
-//	}
-
-//	public LinkedHashMap<String, LinkedHashMap<String, String>> getTagsMap() {
-//		return tagsMap;
-//	}
-
-//	public void setSamplerController(PlaySamplerControl samplerController) {
-//		this.samplerController = samplerController;
-//	}
-
-//	public PlaySamplerControl getSamplerController() {
-//		return samplerController;
-//	}
-
 	public HashMap<String, IICAClient> getIcaMap() {
 		if (null == icaMap)
 			icaMap = new HashMap<String, IICAClient>();
 		return icaMap;
 	}
-
-//	public void setIcaMap(HashMap<String, IICAClient> map) {
-//		icaMap = map;
-//	}
 	
 	//returns ${variable} value if it exists; returns arg otherwise
 	public String getVariableValue(String val) {
@@ -298,7 +260,7 @@ public class IcaConnector {
 	
 	class IcaConnHelper {
 		private IICAClient ica;
-		private boolean isICALoggedOn;
+		private boolean isICALoggedOn = false;
 		boolean error = false;
 		
 		private void initAndConnect() {
@@ -326,7 +288,7 @@ public class IcaConnector {
 		}
 		
 		private void setIcaClientListener() {
-
+			
 			ica.advise(_IICAClientEvents.class, new _IICAClientEvents() {
 
 				public void onLogon() {
@@ -405,8 +367,6 @@ public class IcaConnector {
 					// JOptionPane.ERROR_MESSAGE);
 				}
 			});
-
 		}
-
 	}
 }
