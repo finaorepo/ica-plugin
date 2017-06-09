@@ -214,12 +214,4 @@ public class PlaySamplerControl extends GenericController {
 		}
 		return null;
 	}
-	
-	@Override
-	public void initialize() {
-		super.initialize();
-		String threadName = JMeterContextService.getContext().getThread().getThreadName();
-		System.out.println("***initialize()***\nthreadName:"+threadName+"\n**************");
-	}
-	
 }
