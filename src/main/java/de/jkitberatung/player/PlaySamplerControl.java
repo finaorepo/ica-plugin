@@ -1,10 +1,16 @@
 package de.jkitberatung.player;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.jmeter.control.GenericController;
+import org.apache.jmeter.samplers.Sampler;
+import org.apache.jmeter.threads.JMeterContextService;
 
+import de.jkitberatung.recorder.RecordingStep;
 import de.jkitberatung.util.IcaConnector;
+import de.jkitberatung.util.InteractionUtil;
 
 
 public class PlaySamplerControl extends GenericController {
@@ -105,7 +111,7 @@ public class PlaySamplerControl extends GenericController {
 		return getPropertyAsString(SCREENSHOTS_PATH);
 	}
 	
-	public void setScreenshotsForderPath(String path) {
+	public void setScreenshotsFolderPath(String path) {
 		setProperty(SCREENSHOTS_FOLDER_PATH, path);
 	}
 	
@@ -141,21 +147,40 @@ public class PlaySamplerControl extends GenericController {
     public Object clone() {
     	
     	Object clone = super.clone();
+		
+    	((PlaySamplerControl) clone).setDomain(getDomain());
+    	((PlaySamplerControl) clone).setPort(getPort());
+    	((PlaySamplerControl) clone).setPassword(getPassword());
+    	((PlaySamplerControl) clone).setUsername(getUsername());
+    	((PlaySamplerControl) clone).setIcaAddress(getIcaAddress());
+    	((PlaySamplerControl) clone).setInitialApp(getInitialApp());
+    	((PlaySamplerControl) clone).setInteractionPath(getInteractionsPath());
+    	((PlaySamplerControl) clone).setScreenshotsHashesFilePath(getScreenshotsHashesFilePath());
+    	((PlaySamplerControl) clone).setScreenshotsFolderPath(getScreenshotsFolderPath());
+    	((PlaySamplerControl) clone).setSleepFactor(getSleepFactor());
+    	((PlaySamplerControl) clone).setSleepTimes(getSleepTimes());
+    	((PlaySamplerControl) clone).setUseIcaFile(getUseIcaFile());
+		
    	
-    	IcaConnector icaConnector = new IcaConnector();
-		icaConnector.setAddress(getIcaAddress());
-		icaConnector.setDomain(getDomain());
-		icaConnector.setPort(getPort());
-		icaConnector.setUsername(getUsername());
-		icaConnector.setPassword(getPassword());
-		icaConnector.setApp(getInitialApp());
-		icaConnector.setRunningMode(getRunningMode());
-		icaConnector.setUseIcaFile(getUseIcaFile());
-		icaConnector.setIcaFilePath(getIcaFilePath());
-    	((PlaySamplerControl) clone).setIcaConnector(icaConnector);
+//    	IcaConnector icaConnector = new IcaConnector();
+//		icaConnector.setAddress(getIcaAddress());
+//		icaConnector.setDomain(getDomain());
+//		icaConnector.setPort(getPort());
+//		icaConnector.setUsername(getUsername());
+//		icaConnector.setPassword(getPassword());
+//		icaConnector.setApp(getInitialApp());
+//		icaConnector.setRunningMode(getRunningMode());
+//		icaConnector.setUseIcaFile(getUseIcaFile());
+//		icaConnector.setIcaFilePath(getIcaFilePath());
+//    	((PlaySamplerControl) clone).setIcaConnector(icaConnector);
     	
     	return clone;
     }
+
+	private boolean getSleepTimes() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 	public void setIcaConnector(IcaConnector icaConnector) {
 		this.icaConnector = icaConnector;
@@ -172,4 +197,49 @@ public class PlaySamplerControl extends GenericController {
 	public String getRunningMode() {
 		return getPropertyAsString(RUNNING_MODE);
 	}
+	
+//steps = InteractionUtil.readInteractions(jtfInteractionsFile.getText());
+//IcaConnector.getInstance().setSteps(steps);
+	
+	@Override
+	public Sampler next() {
+		String threadGroupName = JMeterContextService.getContext().getThreadGroup().getName();
+		System.out.println("***next()***\nthreadGroupName:"+threadGroupName+"\n**************");
+
+		if(IcaConnector.getInstance(threadGroupName) == null) {
+			L.fine("PlaySamplerControl creating icaConn for thread " + threadGroupName);
+			List<RecordingStep> steps = null;
+			try {
+				steps = InteractionUtil.readInteractions(getInteractionsPath());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("NULL IN PlayerSamplerControl next()");
+			}
+			IcaConnector icaConn = new IcaConnector();
+			icaConn.setAddress(getIcaAddress());
+			icaConn.setDomain(getDomain());
+			icaConn.setPort(getPort());
+			icaConn.setUsername(getUsername());
+			icaConn.setPassword(getPassword());
+			icaConn.setApp(getInitialApp());
+			icaConn.setRunningMode(getRunningMode());
+			icaConn.setUseIcaFile(getUseIcaFile());
+			icaConn.setIcaFilePath(getIcaFilePath());
+			icaConn.setSteps(steps);
+			icaConn.setLocationHashFile(getScreenshotsHashesFilePath());
+			icaConn.setLocationHashFolder(getScreenshotsFolderPath());
+			icaConn.setSleepingTimeFactor(
+					new Double(getSleepFactor().split(" ")[0]));
+			IcaConnector.putInstance(threadGroupName, icaConn);
+		}
+		return null;
+	}
+	
+	@Override
+	public void initialize() {
+		super.initialize();
+		String threadName = JMeterContextService.getContext().getThread().getThreadName();
+		System.out.println("***initialize()***\nthreadName:"+threadName+"\n**************");
+	}
+	
 }

@@ -47,7 +47,7 @@ import de.jkitberatung.player.PlaySamplerControl;
 import de.jkitberatung.recorder.Interaction;
 import de.jkitberatung.recorder.RecordingStep;
 import de.jkitberatung.recorder.StringInteraction;
-import de.jkitberatung.util.IcaConnector;
+//import de.jkitberatung.util.IcaConnector;
 import de.jkitberatung.util.InteractionUtil;
 import de.jkitberatung.util.gui.CitrixPanel;
 import de.jkitberatung.util.gui.GuiUtil;
@@ -167,7 +167,7 @@ public class PlaySamplerControlGui extends AbstractControllerGui
 																  globalLocation);				
 				if (fileChooser.showOpenDialog(PlaySamplerControlGui.this) == JFileChooser.APPROVE_OPTION) {
 					jtfScreenshotsFile.setText(fileChooser.getSelectedFile().getAbsolutePath());
-					IcaConnector.getInstance().setLocationHashFile(fileChooser.getSelectedFile().getAbsolutePath());
+//					IcaConnector.getInstance().setLocationHashFile(fileChooser.getSelectedFile().getAbsolutePath());
 					globalLocation = fileChooser.getSelectedFile().getParent();
 				}
 			}
@@ -185,7 +185,7 @@ public class PlaySamplerControlGui extends AbstractControllerGui
 				if (fileChooser.showOpenDialog(PlaySamplerControlGui.this) == JFileChooser.APPROVE_OPTION) {
 					globalLocation = fileChooser.getSelectedFile().getAbsolutePath();
 					jtfScreenshotsFolder.setText(globalLocation);
-					IcaConnector.getInstance().setLocationHashFolder(globalLocation);
+//					IcaConnector.getInstance().setLocationHashFolder(globalLocation);
 				}
 			}
 		});
@@ -270,7 +270,7 @@ public class PlaySamplerControlGui extends AbstractControllerGui
 			String[] row = null;
 			List<Interaction> interactions = null;
 			steps = InteractionUtil.readInteractions(jtfInteractionsFile.getText());
-			IcaConnector.getInstance().setSteps(steps);
+//			IcaConnector.getInstance().setSteps(steps);
 			StringInteraction strInteraction = null;
 			boolean hasTags;
 			LinkedHashMap<String,String> tags = null;
@@ -315,13 +315,13 @@ public class PlaySamplerControlGui extends AbstractControllerGui
 				
 				tagsMap.put(step.getName(), tags);
 			}			
-			IcaConnector.getInstance().setTagsMap(tagsMap);			
+//			IcaConnector.getInstance().setTagsMap(tagsMap);			
 			tableModel.fireTableDataChanged();			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
-			IcaConnector.getInstance().setSamplerController(samplerController);
+//			IcaConnector.getInstance().setSamplerController(samplerController);
 			stepsTableUpdated = true;
 		}
 	}
@@ -359,7 +359,7 @@ public class PlaySamplerControlGui extends AbstractControllerGui
 			samplerController.setInitialApp(citrixPanel.getInitialApp());
 			samplerController.setInteractionPath(jtfInteractionsFile.getText().trim());
 			samplerController.setScreenshotsHashesFilePath(jtfScreenshotsFile.getText().trim());
-			samplerController.setScreenshotsForderPath(jtfScreenshotsFolder.getText().trim());
+			samplerController.setScreenshotsFolderPath(jtfScreenshotsFolder.getText().trim());
 			samplerController.setSleepFactor(jcbSleepFactor.getSelectedItem().toString());
 			samplerController.setSleepTimes(jckbPlaySleep.isSelected());
 			samplerController.setRunningMode(jrbNormalMode.isSelected()?"NORMAL":"WINDOWLESS");
@@ -371,19 +371,19 @@ public class PlaySamplerControlGui extends AbstractControllerGui
 				icaConnector = new IcaConnector();
 
  * */
-			IcaConnector icaConnector = new IcaConnector();
-			icaConnector.setAddress(samplerController.getIcaAddress());
-			icaConnector.setDomain(samplerController.getDomain());
-			icaConnector.setPort(samplerController.getPort());
-			icaConnector.setUsername(samplerController.getUsername());
-			icaConnector.setPassword(samplerController.getPassword());
-			icaConnector.setApp(samplerController.getInitialApp());
-			icaConnector.setRunningMode(samplerController.getRunningMode());
-			icaConnector.setUseIcaFile(samplerController.getUseIcaFile());
-			icaConnector.setIcaFilePath(samplerController.getIcaFilePath());
+//			IcaConnector icaConnector = new IcaConnector();
+//			icaConnector.setAddress(samplerController.getIcaAddress());
+//			icaConnector.setDomain(samplerController.getDomain());
+//			icaConnector.setPort(samplerController.getPort());
+//			icaConnector.setUsername(samplerController.getUsername());
+//			icaConnector.setPassword(samplerController.getPassword());
+//			icaConnector.setApp(samplerController.getInitialApp());
+//			icaConnector.setRunningMode(samplerController.getRunningMode());
+//			icaConnector.setUseIcaFile(samplerController.getUseIcaFile());
+//			icaConnector.setIcaFilePath(samplerController.getIcaFilePath());
 			
-			samplerController.setIcaConnector(icaConnector);
-			IcaConnector.getInstance().setSamplerController(samplerController);
+//			samplerController.setIcaConnector(icaConnector);
+//			IcaConnector.getInstance().setSamplerController(samplerController);
 		}
 	}
 
@@ -406,32 +406,32 @@ public class PlaySamplerControlGui extends AbstractControllerGui
 		String interactionsFilePath = samplerController.getInteractionsPath().trim();
 		jtfInteractionsFile.setText(interactionsFilePath);
 		if (!interactionsFilePath.isEmpty() && !stepsTableUpdated) {
-			IcaConnector.resetInstance();
+//			IcaConnector.resetInstance();
 			updateStepsTable();
 			globalLocation = (new File(interactionsFilePath)).getParent();
 		}
 
-		IcaConnector icaConnector = IcaConnector.getInstance();
+//		IcaConnector icaConnector = IcaConnector.getInstance();
 
 		String screenshotsHashesFilePath = samplerController.getScreenshotsHashesFilePath();
 		jtfScreenshotsFile.setText(screenshotsHashesFilePath);
-		icaConnector.setLocationHashFile(screenshotsHashesFilePath);
+//		icaConnector.setLocationHashFile(screenshotsHashesFilePath);
 		if (!screenshotsHashesFilePath.isEmpty() && 
 			(null == globalLocation || globalLocation.isEmpty()))
 			globalLocation = (new File(screenshotsHashesFilePath)).getParent();
 		
 		String screenshotsFolderPath = samplerController.getScreenshotsFolderPath();
 		jtfScreenshotsFolder.setText(screenshotsFolderPath);
-		icaConnector.setLocationHashFolder(screenshotsFolderPath);
+//		icaConnector.setLocationHashFolder(screenshotsFolderPath);
 		if (!screenshotsFolderPath.isEmpty() && 
 			(null == globalLocation || globalLocation.isEmpty()))
 			globalLocation = screenshotsFolderPath;
 		
 		jcbSleepFactor.setSelectedItem(samplerController.getSleepFactor());
-		icaConnector.setSleepingComboBox(jcbSleepFactor);
+//		icaConnector.setSleepingComboBox(jcbSleepFactor);
 
 		jckbPlaySleep.setSelected(samplerController.useSleepTimes());
-		icaConnector.setSleepingCheckBox(jckbPlaySleep);
+//		icaConnector.setSleepingCheckBox(jckbPlaySleep);
 		
 		if (samplerController.getRunningMode().equals("NORMAL")) {
 			jrbNormalMode.setSelected(true);
@@ -472,7 +472,7 @@ public class PlaySamplerControlGui extends AbstractControllerGui
 			
 			PlaySampler sampler = new PlaySampler();
 			
-			sampler.setController(samplerController);
+//			sampler.setController(samplerController);
 			
 			sampler.setName(stepName + " Sampler");
 			

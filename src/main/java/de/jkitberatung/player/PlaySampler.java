@@ -23,6 +23,7 @@ import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.Interruptible;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.util.JMeterUtils;
 
 import de.jkitberatung.ica.wsh.IICAClient;
@@ -48,6 +49,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 
 	private static final String SCREENSHOTS_PATH = "PlaySampler.screenshots_path";
 	private static final String SCREENSHOTS_FOLDER_PATH = "PlaySampler.screenshots_folder_path";
+	private static final String STEP_NAME = "PlaySampler.step_name";
 
 	private static final String VALUES_SEPARATOR = ",";
 
@@ -62,7 +64,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 	private int maxduration = JMeterUtils.getPropDefault("ica.max.duration", 30000);
 	private boolean isInterrupted = false;
 
-	private PlaySamplerControl samplerController;
+//	private PlaySamplerControl samplerController;
 
 	
 	@Override
@@ -73,15 +75,16 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 		((PlaySampler) clone).setCrtPlayingStep(crtPlayingStep);
 		((PlaySampler) clone).setIca(ica);
 
-		if (null == samplerController) 
+//		if (null == samplerController) 
 //			setController((PlaySamplerControl) IcaConnector.getInstance().getSamplerController().clone());		
-			setController(IcaConnector.getInstance().getSamplerController());		
+//			setController(IcaConnector.getInstance().getSamplerController());		
 		
-		((PlaySampler) clone).setController((PlaySamplerControl) samplerController.clone());
+//		((PlaySampler) clone).setController((PlaySamplerControl) samplerController.clone());
 		
 		((PlaySampler) clone).setSleepFactor(sleepFactor);
 		((PlaySampler) clone).setStep(step);
 		((PlaySampler) clone).setStringInput(stringInput);
+		((PlaySampler) clone).setStepName(getStepName());
 		
 		return clone;
 	}
@@ -110,30 +113,61 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 		this.sleepFactor = sleepFactor;		
 	}
 	
+	public void setStepName(String stepName) {
+		setProperty(STEP_NAME, stepName);
+	}
+	
+	public String getStepName() {
+		return getPropertyAsString(STEP_NAME);
+	}
+	
+	public String getThreadGroupName() {
+		return JMeterContextService.getContext().getThreadGroup().getName();
+	}
 
 	protected void playInteractions(PlaySampleResult result) {
 
 		try {			
-			if (null == samplerController) 
-				setController((PlaySamplerControl) IcaConnector.getInstance().getSamplerController().clone());
-
+//			if (null == samplerController) 
+//				setController((PlaySamplerControl) IcaConnector.getInstance().getSamplerController().clone());
+			IcaConnector icaConn = IcaConnector.getInstance(getThreadGroupName());
+			System.out.println("Sampler IcaConnector check: " + icaConn.getLocationHashFolder());
 			
-			if (IcaConnector.getInstance().getIcaMap().containsKey(getThreadName()) &&
-				IcaConnector.getInstance().getIcaMap().get(getThreadName()).session() != null) {			
-				ica = IcaConnector.getInstance().getIcaMap().get(getThreadName());
+			if(icaConn == null) {
+				//CONTROLLER HASNT CREATED THIS. THAT IS A PROBLEM
+				L.fine("Error with Controller initializing IcaConn");
+				return;
+			}
+			
+			System.out.println("***CHECKS IN SAMPLER***");
+			System.out.println(icaConn);
+			System.out.println(icaConn.getIcaMap().containsKey(getThreadName()));
+//			System.out.println(icaConn.getIcaMap().get(getThreadName()).session());
+			
+			if ((icaConn != null)
+					&& icaConn.getIcaMap().containsKey(getThreadName()) 
+					&& icaConn.getIcaMap().get(getThreadName()).session() != null) {			
+				ica = icaConn.getIcaMap().get(getThreadName());
 				L.fine("footprint#1");
 			} else {
-				if (step.isFirst()) {
-					setController((PlaySamplerControl) samplerController.clone());
-//					samplerController.getIcaConnector().setIca(null);
-//					samplerController.getIcaConnector().setIcaLoggedOn(false);
-					L.fine(getThreadName() + ": " + "Forcing new connection...");
-				}
-				ica = samplerController.getIcaConnector().getIca();
-				IcaConnector.getInstance().getIcaMap().put(getThreadName(), ica);
+				//
+				
+				
+				System.out.println("playSampler in the else block");
+//				if (step.isFirst()) {
+					//create a new conn, add to icaMap of icaConn
+//					L.fine(getThreadName() + ": " + "Forcing new connection...");
+//				}
+//				icaConn = samplerController.getIcaConnector().getIca();
+//				icaConn.getIcaMap().put(getThreadName(), ica);
+				
+//				ica = icaConn.getIca();
+				ica = icaConn.getIca(getThreadName());
+				icaConn.getIcaMap().put(getThreadName(), ica);
 			}
 			
 			if (ica == null || ica.session() == null) {
+				System.out.println(getThreadName() + ": " + "Failed playing interactions of step: " + step.getName());
 				L.fine(getThreadName() + ": " + "Failed playing interactions of step: " + step.getName());
 				return;
 			}
@@ -146,7 +180,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 			List<Interaction> interactionList = step.getInteractionList();
 			L.fine(getThreadName() + ": " + "Playing step " + step.getName() + "...");
 
-			setSleepFactor();
+			setSleepFactor(icaConn.getSleepingTimeFactor());
 			
 			Interaction lastMouseDown = null;
 
@@ -173,16 +207,16 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 		}
 	}
 
-	private void setSleepFactor() {
-		JCheckBox sleepingCheckBox = IcaConnector.getInstance().getSleepingCheckBox();
-		if (!sleepingCheckBox.isSelected()) {
-			sleepFactor = 0.00;
-			return;
-		}
-		JComboBox sleepingComboBox = IcaConnector.getInstance().getSleepingComboBox();
-		String sleepFactorStr = sleepingComboBox.getSelectedItem().toString();
-		sleepFactor = sleepFactorStr.equals(PlaySamplerControlGui.DEFAULT_SLEEP_FACTOR) ? 1.00 : Double.valueOf(sleepFactorStr).doubleValue();
-	}
+//	private void setSleepFactor() {
+//		JCheckBox sleepingCheckBox = IcaConnector.getInstance().getSleepingCheckBox();
+//		if (!sleepingCheckBox.isSelected()) {
+//			sleepFactor = 0.00;
+//			return;
+//		}
+//		JComboBox sleepingComboBox = IcaConnector.getInstance().getSleepingComboBox();
+//		String sleepFactorStr = sleepingComboBox.getSelectedItem().toString();
+//		sleepFactor = sleepFactorStr.equals(PlaySamplerControlGui.DEFAULT_SLEEP_FACTOR) ? 1.00 : Double.valueOf(sleepFactorStr).doubleValue();
+//	}
 
 	private void playStringInteraction(Interaction interaction,	Interaction lastMouseDown,
 									   IKeyboard keyboard, IMouse mouse, 
@@ -193,15 +227,15 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 		StringInteraction strInteraction = (StringInteraction) interaction;
 		List<Interaction> interactions = strInteraction.getInteractions();
 
-		if (null == stringInput)
-			stringInput = IcaConnector.getInstance().getTagsMap().get(stepName);
+//		if (null == stringInput)
+//			stringInput = IcaConnector.getInstance().getTagsMap().get(stepName);
 		  
 		// Check if we need to play custom csv input. 
 		// Third condition checks that returned value is not equal to ${variable}   
-		if (treeContainsCsvDataSetConfig() && tagIsCustomizable(strInteraction.getName())
-				&& !getTagInput(strInteraction.getName()).equalsIgnoreCase(stringInput.get(strInteraction.getName()))) {
-			interactions = buildInteractionsFromString(getTagInput(strInteraction.getName()));
-		}
+//		if (treeContainsCsvDataSetConfig() && tagIsCustomizable(strInteraction.getName())
+//				&& !getTagInput(strInteraction.getName()).equalsIgnoreCase(stringInput.get(strInteraction.getName()))) {
+//			interactions = buildInteractionsFromString(getTagInput(strInteraction.getName()));
+//		}
 
 		for (Interaction inter : interactions) 
 			playInteraction(inter, lastMouseDown, keyboard, mouse, result);
@@ -215,23 +249,23 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 		return false;
 	}
 
-	private boolean treeContainsCsvDataSetConfig() {
-        Enumeration<JMeterTreeNode> enumNode = threadGroupNode().children();
-        while (enumNode.hasMoreElements()) {
-            JMeterTreeNode child = enumNode.nextElement();
-            if (child.getUserObject() instanceof CSVDataSet && child.isEnabled())
-            	return true;
-        }
-        return false;
-	}
+//	private boolean treeContainsCsvDataSetConfig() {
+//        Enumeration<JMeterTreeNode> enumNode = threadGroupNode().children();
+//        while (enumNode.hasMoreElements()) {
+//            JMeterTreeNode child = enumNode.nextElement();
+//            if (child.getUserObject() instanceof CSVDataSet && child.isEnabled())
+//            	return true;
+//        }
+//        return false;
+//	}
 
-	private JMeterTreeNode threadGroupNode() {
-        JMeterTreeModel treeModel = GuiPackage.getInstance().getTreeModel();
-		JMeterTreeNode myNode = treeModel.getNodeOf(IcaConnector.getInstance().getSamplerController());
-		if (myNode != null)
-			return (JMeterTreeNode) myNode.getParent();
-		return null;
-    }
+//	private JMeterTreeNode threadGroupNode() {
+//        JMeterTreeModel treeModel = GuiPackage.getInstance().getTreeModel();
+//		JMeterTreeNode myNode = treeModel.getNodeOf(IcaConnector.getInstance().getSamplerController());
+//		if (myNode != null)
+//			return (JMeterTreeNode) myNode.getParent();
+//		return null;
+//    }
 
 	private List<Interaction> buildInteractionsFromString(String string) {
 //		L.fine("Building interations from sting: " + string);		
@@ -363,7 +397,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 		crtPlayingStep.addInteraction(new Interaction(Interaction.Label.ScreenShot, ss.bitmapHash()));
 		result.addHash(ss.bitmapHash(), false);
 		if (saveBitmap) {
-			ss.filename(IcaConnector.getInstance().getLocationHashFolder() + 
+			ss.filename(IcaConnector.getInstance(getThreadGroupName()).getLocationHashFolder() + 
 						System.getProperty("file.separator") + 
 						System.currentTimeMillis() + ".bmp");
 			ss.save();
@@ -375,8 +409,8 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 	public SampleResult sample(Entry e) {
 		if (step == null) {
 			String stepName = getName().substring(0,getName().indexOf(" Sampler"));
-			setStep(IcaConnector.getInstance().getStepByName(stepName));
-			setTagsInput(IcaConnector.getInstance().getTagsMap().get(stepName));
+			setStep(IcaConnector.getInstance(getThreadGroupName()).getStepByName(stepName));
+			//setTagsInput(IcaConnector.getInstance(getThreadGroupName()).getTagsMap().get(stepName));
 		}
 		
 		L.fine(getThreadName() + ": " + "Sampling step " + step.getName() + "...");
@@ -396,7 +430,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 		
 		if (step.isLast()) {
 //			samplerController.getIcaConnector().setIca(null);
-			IcaConnector.getInstance().getIcaMap().remove(getThreadName());
+			IcaConnector.getInstance(getThreadGroupName()).getIcaMap().remove(getThreadName());
 			L.fine(getThreadName() + ":" + "Removed entry from ICA connections map");
 		}
 		
@@ -409,12 +443,12 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 	}
 
 	private synchronized void dumpScreenshotsHashes(PlaySampleResult result) {
-		L.fine(getThreadName() + ": " + "Dumping hash value to file " + IcaConnector.getInstance().getLocationHashFile());
+		L.fine(getThreadName() + ": " + "Dumping hash value to file " + IcaConnector.getInstance(getThreadGroupName()).getLocationHashFile());
 		if (crtPlayingStep == null) {
 			L.fine(" failed: crtPlayingStep is null");
 			return;
 		}
-		File file = new File(IcaConnector.getInstance().getLocationHashFile());
+		File file = new File(IcaConnector.getInstance(getThreadGroupName()).getLocationHashFile());
 		FileWriter fw;
 		try {
 			fw = new FileWriter(file, true);
@@ -427,8 +461,6 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 		}
 	}	
 
-	
-	
 	/**
 	 * Interrupt the sampling (When user hits Stop on the test)
 	 */
@@ -463,7 +495,7 @@ public class PlaySampler extends AbstractSampler implements Interruptible{
 		return getPropertyAsString(tagName);
 	}
 
-	public void setController(PlaySamplerControl samplerController) {
-		this.samplerController = samplerController;
-	}
+//	public void setController(PlaySamplerControl samplerController) {
+//		this.samplerController = samplerController;
+//	}
 }

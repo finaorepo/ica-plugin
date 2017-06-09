@@ -23,11 +23,11 @@ import de.jkitberatung.recorder.RecordingStep;
 
 public class IcaConnector {
 
-	private IICAClient ica;
-	private static IcaConnector instance;
+	//used for creating new client. really dont like this. should probably
+	//be done in a seperate class
+	
 	private PlaySamplerControl samplerController;
 
-	private boolean isICALoggedOn;
 	private String app;
 	private String address;
 	private String port;
@@ -42,12 +42,12 @@ public class IcaConnector {
 	private String icaFilePath;
 
 	private List<RecordingStep> steps;
-	private LinkedHashMap<String, LinkedHashMap<String, String>> tagsMap;
+//	private LinkedHashMap<String, LinkedHashMap<String, String>> tagsMap;
+	private static HashMap<String, IcaConnector> connMap;
 
 	private JCheckBox jckbSleepCheckBox;
 	private JComboBox jcbSleepComboBox;
 
-	boolean error = false;
 	private HashMap<String, IICAClient> icaMap;
 	private static final String VERSION = "1.0.1";
 	private static final Logger L = Logger.getLogger(IcaConnector.class
@@ -108,37 +108,34 @@ public class IcaConnector {
 
 	public IcaConnector() {
 		showVersion();
-		ica = null;
 	}
 
-	public static IcaConnector getInstance() {
-		if (instance == null)
-			instance = new IcaConnector();
-
-		return instance;
+//	public static IcaConnector getInstance() {
+//		if (instance == null)
+//			instance = new IcaConnector();
+//
+//		return instance;
+//	}
+	
+	public static IcaConnector getInstance(String key) {
+		if(connMap == null)
+			connMap = new HashMap<String, IcaConnector>();
+		return connMap.get(key);
+	}
+	
+	public static void putInstance(String key, IcaConnector conn) {
+		connMap.put(key, conn);
 	}
 
-	public static void resetInstance() {
-		instance = null;
+	public static void resetInstance(String key) {
+		IcaConnector conn = connMap.get(key);
+		conn = null;
+		connMap.remove(key);
 	}
 
-	private void initAndConnect() {
 
-		init();
-		connect();
 
-	}
 
-	private void init() {
-		if(getUseIcaFile()) 
-			ica = ICAInitializer.initICASession(getVariableValue(getIcaFilePath()), 
-					getRunningMode());
-		else
-			ica = ICAInitializer.initICASession(getVariableValue(getInitialApp()),
-					getVariableValue(getIcaAddress()), getVariableValue(getPort()), 
-					getVariableValue(getDomain()), getVariableValue(getUsername()), 
-					getVariableValue(getPassword()), getRunningMode());
-	}
 
 	private String getRunningMode() {
 		return runningMode;
@@ -208,120 +205,28 @@ public class IcaConnector {
 		this.icaFilePath = icaFilePath;
 	}
 
-	private void connect() {
-		// Add listeners to ICA Client
-		setIcaClientListener();
-		// Connect to our session
-		L.fine("Connecting to server...");
-		ica.connect();
-	}
 
-	private void setIcaClientListener() {
 
-		ica.advise(_IICAClientEvents.class, new _IICAClientEvents() {
-
-			public void onLogon() {
-				// Right now the session is not null anymore
-
-				L.fine("ICAClientEvent: Logged on.");
-				L.fine("ICAClientEvent: ICA session: " + ica.session());
-
-				ica.session().replayMode(true);
-
-				isICALoggedOn = true;
-
+	
+	//key should be threadName from sampler perspective
+	public IICAClient getIca(String key) {
+		IICAClient ica = icaMap.get(key);
+		
+		if (ica == null || ica.session() == null) {
+			IcaConnHelper connHelper = new IcaConnHelper(); 
+			connHelper.initAndConnect();
+			
+			// Wait until ica session becomes available
+			while (!connHelper.isICALoggedOn && !connHelper.error) {
 				try {
-					IWindows windows = ica.session().topLevelWindows();
-					L.fine("ICAClientEvent: TopLevelWindow count:"
-							+ windows.count());
-
-				} catch (Throwable e) {
-					e.printStackTrace();
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					L.fine("Interrupting connection attempt loop... done.");
 				}
 			}
-
-			@Override
-			public void onConnect() {
-				super.onConnect();
-			}
-
-			@Override
-			public void onWindowCreated(int wndType, int xPos, int yPos,
-					int width, int height) {
-				L.fine("ICAClientEvent: Window created (type):" + wndType);
-				super.onWindowCreated(wndType, xPos, yPos, width, height);
-			}
-
-			@Override
-			public void onWindowDisplayed(int wndType) {
-				L.fine("ICAClientEvent: Window displayed (type):" + wndType);
-			}
-
-			@Override
-			public void onWindowCloseRequest() {
-				L.fine("ICAClientEvent: OnWindow close request");
-			}
-
-			@Override
-			public void onDisconnect() {
-				L.fine("ICAClientEvent: onDisconnect");
-				isICALoggedOn = false;
-				ica = null;
-			}
-
-			@Override
-			public void onDisconnectFailed() {
-				L.fine("ICAClientEvent: Disconnecting failed");
-				error = true;
-				// JOptionPane.showMessageDialog(null,
-				// "Failed disconnecting from the server", "Error",
-				// JOptionPane.ERROR_MESSAGE);
-			}
-
-			@Override
-			public void onLogonFailed() {
-				L.fine("ICAClientEvent: Logging-in failed");
-				error = true;
-				// JOptionPane.showMessageDialog(null,
-				// "Error logging into the server", "Error",
-				// JOptionPane.ERROR_MESSAGE);
-			}
-
-			@Override
-			public void onConnectFailed() {
-				L.fine("ICAClientEvent: Connecting failed");
-				error = true;
-				// JOptionPane.showMessageDialog(null,
-				// "Error connecting to the server", "Error",
-				// JOptionPane.ERROR_MESSAGE);
-			}
-		});
-
-	}
-
-	public IICAClient getIca() {
-
-		if (ica == null || ica.session() == null)
-			initAndConnect();
-
-		// Wait until ica session becomes available
-		while (!isICALoggedOn && !error) {
-			try {
-				Thread.sleep(200);
-			} catch (InterruptedException e) {
-				L.fine("Interrupting connection attempt loop... done.");
-			}
 		}
-
+		
 		return ica;
-	}
-
-	public void setIca(IICAClient ica) {
-		this.ica = ica;
-	}
-
-	public void setIcaLoggedOn(boolean b) {
-		this.isICALoggedOn = b;
 	}
 
 	public RecordingStep getStepByName(String stepName) {
@@ -355,22 +260,22 @@ public class IcaConnector {
 		return jcbSleepComboBox;
 	}
 
-	public void setTagsMap(
-			LinkedHashMap<String, LinkedHashMap<String, String>> tagsMap) {
-		this.tagsMap = tagsMap;
-	}
+//	public void setTagsMap(
+//			LinkedHashMap<String, LinkedHashMap<String, String>> tagsMap) {
+//		this.tagsMap = tagsMap;
+//	}
 
-	public LinkedHashMap<String, LinkedHashMap<String, String>> getTagsMap() {
-		return tagsMap;
-	}
+//	public LinkedHashMap<String, LinkedHashMap<String, String>> getTagsMap() {
+//		return tagsMap;
+//	}
 
-	public void setSamplerController(PlaySamplerControl samplerController) {
-		this.samplerController = samplerController;
-	}
+//	public void setSamplerController(PlaySamplerControl samplerController) {
+//		this.samplerController = samplerController;
+//	}
 
-	public PlaySamplerControl getSamplerController() {
-		return samplerController;
-	}
+//	public PlaySamplerControl getSamplerController() {
+//		return samplerController;
+//	}
 
 	public HashMap<String, IICAClient> getIcaMap() {
 		if (null == icaMap)
@@ -378,9 +283,9 @@ public class IcaConnector {
 		return icaMap;
 	}
 
-	public void setIcaMap(HashMap<String, IICAClient> map) {
-		icaMap = map;
-	}
+//	public void setIcaMap(HashMap<String, IICAClient> map) {
+//		icaMap = map;
+//	}
 	
 	//returns ${variable} value if it exists; returns arg otherwise
 	public String getVariableValue(String val) {
@@ -389,5 +294,119 @@ public class IcaConnector {
 					get(val.substring(2, val.length() - 1));
 		}
 		return val;
+	}
+	
+	class IcaConnHelper {
+		private IICAClient ica;
+		private boolean isICALoggedOn;
+		boolean error = false;
+		
+		private void initAndConnect() {
+			init();
+			connect();
+		}
+		
+		private void init() {
+			if(getUseIcaFile()) 
+				ica = ICAInitializer.initICASession(getVariableValue(getIcaFilePath()), 
+						getRunningMode());
+			else
+				ica = ICAInitializer.initICASession(getVariableValue(getInitialApp()),
+						getVariableValue(getIcaAddress()), getVariableValue(getPort()), 
+						getVariableValue(getDomain()), getVariableValue(getUsername()), 
+						getVariableValue(getPassword()), getRunningMode());
+		}
+
+		private void connect() {
+			// Add listeners to ICA Client
+			setIcaClientListener();
+			// Connect to our session
+			L.fine("Connecting to server...");
+			ica.connect();
+		}
+		
+		private void setIcaClientListener() {
+
+			ica.advise(_IICAClientEvents.class, new _IICAClientEvents() {
+
+				public void onLogon() {
+					// Right now the session is not null anymore
+
+					L.fine("ICAClientEvent: Logged on.");
+					L.fine("ICAClientEvent: ICA session: " + ica.session());
+
+					ica.session().replayMode(true);
+
+					isICALoggedOn = true;
+
+					try {
+						IWindows windows = ica.session().topLevelWindows();
+						L.fine("ICAClientEvent: TopLevelWindow count:"
+								+ windows.count());
+
+					} catch (Throwable e) {
+						e.printStackTrace();
+					}
+				}
+
+				@Override
+				public void onConnect() {
+					super.onConnect();
+				}
+
+				@Override
+				public void onWindowCreated(int wndType, int xPos, int yPos,
+						int width, int height) {
+					L.fine("ICAClientEvent: Window created (type):" + wndType);
+					super.onWindowCreated(wndType, xPos, yPos, width, height);
+				}
+
+				@Override
+				public void onWindowDisplayed(int wndType) {
+					L.fine("ICAClientEvent: Window displayed (type):" + wndType);
+				}
+
+				@Override
+				public void onWindowCloseRequest() {
+					L.fine("ICAClientEvent: OnWindow close request");
+				}
+
+				@Override
+				public void onDisconnect() {
+					L.fine("ICAClientEvent: onDisconnect");
+					isICALoggedOn = false;
+					ica = null;
+				}
+
+				@Override
+				public void onDisconnectFailed() {
+					L.fine("ICAClientEvent: Disconnecting failed");
+					error = true;
+					// JOptionPane.showMessageDialog(null,
+					// "Failed disconnecting from the server", "Error",
+					// JOptionPane.ERROR_MESSAGE);
+				}
+
+				@Override
+				public void onLogonFailed() {
+					L.fine("ICAClientEvent: Logging-in failed");
+					error = true;
+					// JOptionPane.showMessageDialog(null,
+					// "Error logging into the server", "Error",
+					// JOptionPane.ERROR_MESSAGE);
+				}
+
+				@Override
+				public void onConnectFailed() {
+					L.fine("ICAClientEvent: Connecting failed");
+					error = true;
+					// JOptionPane.showMessageDialog(null,
+					// "Error connecting to the server", "Error",
+					// JOptionPane.ERROR_MESSAGE);
+				}
+			});
+
+		}
+
 	}
 }
